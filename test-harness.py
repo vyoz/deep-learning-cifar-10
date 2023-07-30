@@ -115,7 +115,7 @@ def define_model3():
 	return model
 
 # plot diagnostic learning curves
-def summarize_diagnostics(history):
+def summarize_diagnostics(history, file_history):
 	# plot loss
 	pyplot.subplot(211)
 	pyplot.title('Cross Entropy Loss')
@@ -127,12 +127,13 @@ def summarize_diagnostics(history):
 	pyplot.plot(history.history['accuracy'], color='blue', label='train')
 	pyplot.plot(history.history['val_accuracy'], color='orange', label='test')
 	# save plot to file
-	filename = sys.argv[0].split('/')[-1]
-	pyplot.savefig(filename + '_plot.png')
+	#filename = sys.argv[0].split('/')[-1]
+	#pyplot.savefig(filename + '_plot.png')
+	pyplot.savefig(file_history)
 	pyplot.close()
 
 # run the test harness for evaluating a model
-def run_test_harness(percent, epochs_num, train_method, file_model):
+def run_test_harness(percent, epochs_num, train_method, file_model, file_history):
 	# load dataset
 	trainX, trainY, testX, testY = load_dataset(percent)
 	# prepare pixel data
@@ -146,7 +147,7 @@ def run_test_harness(percent, epochs_num, train_method, file_model):
 	_, acc = model.evaluate(testX, testY, verbose=0)
 	print('> %.3f' % (acc * 100.0))
 	# learning curves
-	summarize_diagnostics(history)
+	summarize_diagnostics(history, file_history)
 	return acc * 100.0
 
 def curr_time():
@@ -156,24 +157,27 @@ def curr_time():
 # usage
 #	python test-harness.py <data-percent> <epochs-num> <train-method>
 if len(sys.argv) != 4 :
+	percent = 0.1
+	epochs_num = 80
+	train_method = "model1"
 	print("Usage:\n%s <data-percent> <epochs-num> <train-method>" % sys.argv[0])
 	print("where:\n")
-	print("  <data-percent>: a float number from 0 to 1\n")
-	print("  <epochs-num>: epochs num, range from 10 to 200\n")
-	print("  <train-method>: available methods: [model1, model2, model3]\n")
-	sys.exit(-1)
-
-percent = float(sys.argv[1])
-epochs_num = int(sys.argv[2])
-train_method = sys.argv[3]
+	print("  <data-percent>: default:%f, a float number from 0 to 1\n" % percent)
+	print("  <epochs-num>: default:%d epochs num, range from 10 to 200\n" % epochs_num)
+	print("  <train-method>: default:%s, available methods: [model1, model2, model3]\n" % train_method)
+else:
+	percent = float(sys.argv[1])
+	epochs_num = int(sys.argv[2])
+	train_method = sys.argv[3]
 
 file_model = os.getcwd() + "/" + train_method + ".percent-" + str(percent) + ".epochs-" + str(epochs_num) + ".keras"
 file_log = file_model + ".log"
+file_history = file_model + ".png"
 f=open(file_log, "at")
 msg = "{}: training with data set percentage:{} epochs-num:{} train-method:{}\n".format(curr_time(), percent, epochs_num, train_method)
 print(msg)
 f.write(msg)
-acc = run_test_harness(percent, epochs_num, train_method, file_model)
+acc = run_test_harness(percent, epochs_num, train_method, file_model, file_history)
 msg =  "{}: result:{} model file:{}\n".format(curr_time(), acc, file_model)
 print(msg)
 f.write(msg);
