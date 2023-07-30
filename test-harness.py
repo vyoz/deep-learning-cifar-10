@@ -14,24 +14,23 @@ from keras.layers import Flatten
 from keras.optimizers import SGD
 
 # load data in percentage
-def load_data_partial(percent, data):
-	len_orig = len(data)
-	idx = numpy.arange(len(data))
+def load_data_partial(percent, dataX, dataY):
+	len_orig = len(dataX)
+	idx = numpy.arange(len_orig)
 	numpy.random.shuffle(idx)
-	subset_data = data[:int(percent*len(idx))]
-	len_new = len(subset_data)
-	print("origial data len:%d, new data let:%d" % (len_orig, len_new))
-	return subset_data
+	subset_dataX = dataX[:int(percent*len(idx))]
+	subset_dataY = dataY[:int(percent*len(idx))]
+	len_new = len(subset_dataX)
+	#print("origial data len:%d, new data let:%d" % (len_orig, len_new))
+	return (subset_dataX, subset_dataY)
 	
 # load train and test dataset
 def load_dataset(percent):
 	# load dataset
 	(trainX, trainY), (testX, testY) = cifar10.load_data()
 
-	trainX = load_data_partial(percent, trainX)
-	trainY = load_data_partial(percent, trainY)
-	testX = load_data_partial(percent, testX)
-	testY = load_data_partial(percent, testY)
+	(trainX, trainY) = load_data_partial(percent, trainX, trainY)
+	(testX, testY) = load_data_partial(percent, testX, testY)
 
 	# one hot encode target values
 	print("train data size:%d" % len(trainY))
