@@ -66,7 +66,7 @@ def test_model(file_model, file_image):
 	return(label)
 
 def convert_indices_to_labels(predictions):
-	LABEL_LIST = ['frog', 'truck', 'deer', 'automobile', 'bird', 'horse', 'ship','cat', 'dog', 'airplane']
+	LABEL_LIST = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 	index_to_label = dict(zip(list(range(len(LABEL_LIST))), LABEL_LIST))
 	return [index_to_label[index] for index in predictions]
 
