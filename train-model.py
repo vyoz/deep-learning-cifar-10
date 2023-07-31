@@ -21,12 +21,10 @@ from keras.layers import Dense,Dropout,Conv2D,MaxPooling2D,Flatten
 # load data in percentage
 def load_data_partial(percent, dataX, dataY):
 	len_orig = len(dataX)
-	idx = np.arange(len_orig)
-	np.random.shuffle(idx)
-	subset_dataX = dataX[:int(percent*len(idx))]
-	subset_dataY = dataY[:int(percent*len(idx))]
-	len_new = len(subset_dataX)
-	#print("origial data len:%d, new data let:%d" % (len_orig, len_new))
+	len_new = int(percent*len_orig)
+	#print("new len:%d" % len_new)
+	subset_dataX = dataX[:len_new]
+	subset_dataY = dataY[:len_new]
 	return (subset_dataX, subset_dataY)
 	
 # load train and test dataset
