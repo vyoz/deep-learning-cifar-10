@@ -1,7 +1,8 @@
 # test harness for evaluating models on the cifar10 dataset
 import sys
 import os
-import numpy 
+import numpy as np
+import pandas as pd
 from datetime import datetime
 from matplotlib import pyplot
 from keras.datasets import cifar10
@@ -12,12 +13,16 @@ from keras.layers import MaxPooling2D
 from keras.layers import Dense
 from keras.layers import Flatten
 from keras.optimizers import SGD
+from keras.layers import Dense,Dropout,Conv2D,MaxPooling2D,Flatten
+#from keras.utils import np_utils
+#from keras.constraints import maxnorm
+#from keras import backend as K
 
 # load data in percentage
 def load_data_partial(percent, dataX, dataY):
 	len_orig = len(dataX)
-	idx = numpy.arange(len_orig)
-	numpy.random.shuffle(idx)
+	idx = np.arange(len_orig)
+	np.random.shuffle(idx)
 	subset_dataX = dataX[:int(percent*len(idx))]
 	subset_dataY = dataY[:int(percent*len(idx))]
 	len_new = len(subset_dataX)
@@ -58,12 +63,15 @@ def define_model(train_method):
 		return define_model2()
 	elif ( train_method == "model3" ):
 		return define_model3()
+	elif ( train_method == "model4" ):
+		return define_model4()
 	else:
 		print("invalid train method:%s" % train_method)
 		sys.exit(-1)
 
 # define cnn model - 1
 def define_model1():
+	print("running 1 VGG Block")
 	model = Sequential()
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same', input_shape=(32, 32, 3)))
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
@@ -78,24 +86,26 @@ def define_model1():
 
 # define cnn model - 2
 def define_model2():
- model = Sequential()
- model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same', input_shape=(32, 32, 3)))
- model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
- model.add(MaxPooling2D((2, 2)))
- model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
- model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
- model.add(MaxPooling2D((2, 2)))
- model.add(Flatten())
- model.add(Dense(128, activation='relu', kernel_initializer='he_uniform'))
- model.add(Dense(10, activation='softmax'))
- # compile model
- opt = SGD(lr=0.001, momentum=0.9)
- model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
- return model
+	print("running 2 VGG Blocks")
+	model = Sequential()
+	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same', input_shape=(32, 32, 3)))
+	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
+	model.add(MaxPooling2D((2, 2)))
+	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
+	model.add(Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
+	model.add(MaxPooling2D((2, 2)))
+	model.add(Flatten())
+	model.add(Dense(128, activation='relu', kernel_initializer='he_uniform'))
+	model.add(Dense(10, activation='softmax'))
+	# compile model
+	opt = SGD(lr=0.001, momentum=0.9)
+	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
 
 
 # define cnn model - 3
 def define_model3():
+	print("running 3 VGG Blocks")
 	model = Sequential()
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same', input_shape=(32, 32, 3)))
 	model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'))
@@ -113,6 +123,33 @@ def define_model3():
 	opt = SGD(lr=0.001, momentum=0.9)
 	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
 	return model
+
+#define cnn model - 4
+#  ref: https://www.kaggle.com/code/aounullahkhan/object-recongnition
+def define_model4():
+	model=Sequential()
+	model.add(Conv2D(32,(3,3),input_shape=(32,32,3),activation="relu"))
+	model.add(Dropout(0.2))
+	# model.add(Conv2D(32,(3,3),activation="relu"))
+	model.add(MaxPooling2D(pool_size=(2,2)))
+	model.add(Conv2D(64,(3,3),activation="relu"))
+	model.add(Dropout(0.2))
+	# model.add(Conv2D(64,(3,3),activation="relu",padding="same"))
+	model.add(MaxPooling2D(pool_size=(2,2),padding="same"))
+	model.add(Conv2D(128,(3,3),activation="relu",padding="same"))
+	model.add(Dropout(0.2))
+	# model.add(Conv2D(128,(3,3),activation="relu",padding="same"))
+	model.add(MaxPooling2D(pool_size=(2,2),padding="same"))
+	model.add(Flatten())
+	model.add(Dropout(0.2))
+	model.add(Dense(1024,activation="relu"))
+	model.add(Dropout(0.2))
+	model.add(Dense(1024,activation="relu"))
+	model.add(Dropout(0.2))
+	model.add(Dense(10,activation="softmax"))
+	#compile model
+	sgd=SGD(lr=lrate,momentum=0.9,decay=decay,nesterov=False)
+	model.compile(loss="categorical_crossentropy",optimizer=sgd,metrics=["accuracy"])
 
 # plot diagnostic learning curves
 def summarize_diagnostics(history, file_history):
@@ -164,13 +201,13 @@ if len(sys.argv) != 4 :
 	print("where:\n")
 	print("  <data-percent>: default:%f, a float number from 0 to 1\n" % percent)
 	print("  <epochs-num>: default:%d epochs num, range from 10 to 200\n" % epochs_num)
-	print("  <train-method>: default:%s, available methods: [model1, model2, model3]\n" % train_method)
+	print("  <train-method>: default:%s, available methods: [model1, model2, model3, model4]\n" % train_method)
 else:
 	percent = float(sys.argv[1])
 	epochs_num = int(sys.argv[2])
 	train_method = sys.argv[3]
 
-file_model = os.getcwd() + "/" + train_method + ".percent-" + str(percent) + ".epochs-" + str(epochs_num) + ".keras"
+file_model = os.getcwd() + "/" + train_method + ".percent-" + str(percent) + ".epochs-" + str(epochs_num) + ".keras.h5"
 file_log = file_model + ".log"
 file_history = file_model + ".png"
 f=open(file_log, "at")
